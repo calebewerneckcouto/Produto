@@ -1,7 +1,7 @@
 package com.example.produto.controller;
 
 import com.example.produto.entity.Produto;
-import com.example.produto.repository.ProdutoRepository;
+import com.example.produto.service.ProdutoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,17 +11,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProdutoControllerTest {
 
     @Mock
-    private ProdutoRepository repository;
+    private ProdutoService produtoService;
 
     @InjectMocks
     private ProdutoController controller;
@@ -35,82 +33,51 @@ class ProdutoControllerTest {
     }
 
     @Test
-    void salvarDevePersistirERetornarProduto() {
-        when(repository.save(any(Produto.class))).thenReturn(produto);
+    void salvarDeveDelegarParaService() {
+        when(produtoService.salvar(produto)).thenReturn(produto);
 
-        Produto novo = new Produto("Notebook", 3500.0, 10);
-        Produto resultado = controller.salvar(novo);
+        Produto resultado = controller.salvar(produto);
 
-        assertNotNull(resultado);
-        assertEquals(1L, resultado.getId());
-        assertEquals("Notebook", resultado.getNome());
-        verify(repository).save(novo);
+        assertEquals(produto, resultado);
+        verify(produtoService).salvar(produto);
     }
 
     @Test
-    void listarDeveRetornarTodosProdutos() {
-        Produto produto2 = new Produto("Mouse", 89.90, 50);
-        produto2.setId(2L);
-
-        when(repository.findAll()).thenReturn(Arrays.asList(produto, produto2));
+    void listarDeveDelegarParaService() {
+        List<Produto> produtos = Arrays.asList(produto);
+        when(produtoService.listar()).thenReturn(produtos);
 
         List<Produto> resultado = controller.listar();
 
-        assertEquals(2, resultado.size());
-        verify(repository).findAll();
+        assertEquals(1, resultado.size());
+        verify(produtoService).listar();
     }
 
     @Test
-    void buscarDeveRetornarProdutoQuandoEncontrado() {
-        when(repository.findById(1L)).thenReturn(Optional.of(produto));
+    void buscarDeveDelegarParaService() {
+        when(produtoService.buscarPorId(1L)).thenReturn(produto);
 
         Produto resultado = controller.buscar(1L);
 
-        assertNotNull(resultado);
-        assertEquals(1L, resultado.getId());
-        verify(repository).findById(1L);
+        assertEquals(produto, resultado);
+        verify(produtoService).buscarPorId(1L);
     }
 
     @Test
-    void buscarDeveRetornarNullQuandoNaoEncontrado() {
-        when(repository.findById(99L)).thenReturn(Optional.empty());
-
-        Produto resultado = controller.buscar(99L);
-
-        assertNull(resultado);
-        verify(repository).findById(99L);
-    }
-
-    @Test
-    void atualizarDeveModificarProdutoExistente() {
+    void atualizarDeveDelegarParaService() {
         Produto dadosAtualizados = new Produto("Notebook Gamer", 4500.0, 5);
-
-        when(repository.findById(1L)).thenReturn(Optional.of(produto));
-        when(repository.save(any(Produto.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(produtoService.atualizar(1L, dadosAtualizados)).thenReturn(produto);
 
         Produto resultado = controller.atualizar(1L, dadosAtualizados);
 
-        assertNotNull(resultado);
-        assertEquals("Notebook Gamer", resultado.getNome());
-        assertEquals(4500.0, resultado.getPreco());
-        assertEquals(5, resultado.getQuantidade());
-        verify(repository).save(produto);
+        assertEquals(produto, resultado);
+        verify(produtoService).atualizar(1L, dadosAtualizados);
     }
 
     @Test
-    void atualizarDeveRetornarNullQuandoProdutoNaoExiste() {
-        when(repository.findById(99L)).thenReturn(Optional.empty());
-
-        Produto resultado = controller.atualizar(99L, new Produto("X", 1.0, 1));
-
-        assertNull(resultado);
-        verify(repository, never()).save(any());
-    }
-
-    @Test
-    void excluirDeveRemoverProdutoPorId() {
+    void excluirDeveDelegarParaService() {
         controller.excluir(1L);
 
-        verify(repository).deleteById(1L);
+        verify(produtoService).excluir(1L);
     }
 }
