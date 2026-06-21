@@ -11,6 +11,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
@@ -18,15 +19,27 @@ import com.example.produto.dto.ErrorResponse;
 import com.example.produto.dto.ErrorResponse.CampoErro;
 import com.example.produto.exception.ProdutoDuplicadoException;
 import com.example.produto.exception.ProdutoNaoEncontradoException;
+import com.example.produto.exception.UsuarioDuplicadoException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-@RestControllerAdvice
+@RestControllerAdvice(annotations = RestController.class)
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ProdutoDuplicadoException.class)
     public ResponseEntity<ErrorResponse> handleProdutoDuplicado(
             ProdutoDuplicadoException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(
+                        HttpStatus.CONFLICT.value(),
+                        "Conflict",
+                        ex.getMessage(),
+                        request.getRequestURI()));
+    }
+
+    @ExceptionHandler(UsuarioDuplicadoException.class)
+    public ResponseEntity<ErrorResponse> handleUsuarioDuplicado(
+            UsuarioDuplicadoException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.of(
                         HttpStatus.CONFLICT.value(),
